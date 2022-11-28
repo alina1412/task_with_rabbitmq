@@ -1,24 +1,16 @@
 version: '3'
 
-networks:
-  net:
-    driver: bridge
-
 services:
   frontend:
     container_name: frontend
     build: frontend/
     image: frontend
-    environment:
-      - PYTHONUNBUFFERED=1
     ports:
       - 8080:80
     depends_on:
       - rabbitmq
-    links:
-      - backend
-    networks:
-      - net
+    # links:
+    #   - backend
     volumes:
       - ./frontend:/usr/share/nginx/html:ro
 
@@ -32,10 +24,8 @@ services:
       - 8765:80
     depends_on:
       - rabbitmq
-    links:
-      - rabbitmq
-    networks:
-      - net
+    # links:
+    #   - rabbitmq
     environment:
       - PYTHONUNBUFFERED=1
 
@@ -54,42 +44,44 @@ services:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
       RABBITMQ_NODE_TYPE: rabbitmq
-      PYTHONUNBUFFERED: 1
     ports:
       - 5672:5672
       - 15672:15672
     volumes:
       - r_data:/var/lib/rabbitmq/data
       - r_logs:/var/log/rabbitmq/log
-    networks:
-      - net
       
   servicedb:
     container_name: fastapi-service
     build: servicedb/service
     image: servicedb-fastapi
-    environment:
-      - PYTHONUNBUFFERED=1
     env_file: .env
+    environment:
+      POSTGRES_DB: ${DATABASE_NAME}
+      POSTGRES_USER: ${DATABASE_USERNAME}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      PYTHONUNBUFFERED: 1
+      RABBITMQ_USERNAME: ${RABBITMQ_USERNAME}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
     ports:
       - 8000:80
     depends_on:
       - rabbitmq
-    links:
-      - rabbitmq
       - db
-    networks:
-      - net
+    # links:
+    #   - rabbitmq
+    #   - db
 
   db:
     container_name: db
     build: db/
     image: db
     environment:
-      - POSTGRES_DB=${DATABASE_NAME}
-      - POSTGRES_USER=${DATABASE_USERNAME}
-      - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
-      - PYTHONUNBUFFERED=1
+      POSTGRES_DB: ${DATABASE_NAME}
+      POSTGRES_USER: ${DATABASE_USERNAME}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
     ports:
       - ${POSTGRES_PORT}:5432
     volumes:
