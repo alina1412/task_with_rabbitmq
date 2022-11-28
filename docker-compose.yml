@@ -40,8 +40,9 @@ services:
       - PYTHONUNBUFFERED=1
 
   rabbitmq:
-    image: rabbitmq:3.6.6-management
-    container_name: rabbitmq      
+    container_name: rabbitmq-service
+    build: rabbitmq/
+    image: rabbitmq-service    
     healthcheck:
       start_period: 60s
       timeout: 120s
@@ -81,8 +82,9 @@ services:
       - net
 
   db:
-    image: 'postgres:latest'
-    container_name: 'db'
+    container_name: db
+    build: db/
+    image: db
     environment:
       - POSTGRES_DB=${DATABASE_NAME}
       - POSTGRES_USER=${DATABASE_USERNAME}
