@@ -1,0 +1,103 @@
+version: '3'
+
+networks:
+  net:
+    driver: bridge
+
+services:
+  frontend:
+    container_name: frontend
+    build: frontend/
+    image: frontend
+    environment:
+      - PYTHONUNBUFFERED=1
+    ports:
+      - 8080:80
+    depends_on:
+      - rabbitmq
+    links:
+      - backend
+    networks:
+      - net
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro
+
+  backend:
+    container_name: backend-service
+    build: backend/service
+    image: backend-service
+    restart: on-failure
+    env_file: .env
+    ports:
+      - 8765:80
+    depends_on:
+      - rabbitmq
+    links:
+      - rabbitmq
+    networks:
+      - net
+    environment:
+      - PYTHONUNBUFFERED=1
+
+  rabbitmq:
+    image: rabbitmq:3.6.6-management
+    container_name: rabbitmq      
+    healthcheck:
+      start_period: 60s
+      timeout: 120s
+      interval: 30s
+      test: ifconfig | grep broadcast
+    env_file: .env
+    environment:
+      RABBITMQ_DEFAULT_VHOST: amqp
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+      RABBITMQ_NODE_TYPE: rabbitmq
+      PYTHONUNBUFFERED: 1
+    ports:
+      - 5672:5672
+      - 15672:15672
+    volumes:
+      - r_data:/var/lib/rabbitmq/data
+      - r_logs:/var/log/rabbitmq/log
+    networks:
+      - net
+      
+  servicedb:
+    container_name: fastapi-service
+    build: servicedb/service
+    image: servicedb-fastapi
+    environment:
+      - PYTHONUNBUFFERED=1
+    env_file: .env
+    ports:
+      - 8000:80
+    depends_on:
+      - rabbitmq
+    links:
+      - rabbitmq
+      - db
+    networks:
+      - net
+
+  db:
+    image: 'postgres:latest'
+    container_name: 'db'
+    environment:
+      - POSTGRES_DB=${DATABASE_NAME}
+      - POSTGRES_USER=${DATABASE_USERNAME}
+      - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
+      - PYTHONUNBUFFERED=1
+    ports:
+      - ${POSTGRES_PORT}:5432
+    volumes:
+      - ./.database_data:/var/lib/postgresql/data
+
+
+volumes:
+  r_data:
+    driver: local
+  r_logs:
+    driver: local
+  .database_data:
+    driver: local

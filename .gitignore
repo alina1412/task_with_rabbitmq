@@ -1,0 +1,9 @@
+__pycache__/
+*.env
+.vscode
+.pytest_cache
+.database_data/*
+migrations/*
+htmlcov/*
+.coverage
+example_*
