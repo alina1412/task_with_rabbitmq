@@ -52,9 +52,10 @@ services:
       - r_logs:/var/log/rabbitmq/log
       
   servicedb:
-    container_name: fastapi-service
+    container_name: servicedb
     build: servicedb/service
     image: servicedb-fastapi
+    restart: on-failure
     env_file: .env
     environment:
       POSTGRES_DB: ${DATABASE_NAME}
