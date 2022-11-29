@@ -1,13 +1,14 @@
 """сервис записи в базу данных: servicedb/"""
 
+import asyncio
 import logging
 
 import uvicorn
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from service.db.db_settings import get_session
+from service.rabbitmq_reseiver import from_que_to_db
+from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +44,13 @@ async def pingdb(session: AsyncSession = Depends(get_session)):
     print(res)
     logger.info(res)
     return {"success": "1"}
+
+
+@app.on_event("startup")
+async def startup():
+    loop = asyncio.get_running_loop()
+    task = loop.create_task(from_que_to_db())
+    await task
 
 
 if __name__ == "__main__":
