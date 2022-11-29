@@ -1,10 +1,10 @@
 #!/usr/bin/env python
+import asyncio
 import json
 import logging
 
 import databases
 import pika
-
 from service.config import password, username
 from service.db.db_settings import async_database_uri
 from service.models import user_data
@@ -21,7 +21,7 @@ parameters = pika.ConnectionParameters(
     virtual_host="amqp",
     port=5672,
 )
-queue_name = "task_queue"
+QUEUE = "task_queue"
 
 
 async def prepare_dict(message) -> dict:
@@ -50,34 +50,38 @@ async def insert_to_db(data: dict) -> None:
         logger.error("NOT inserted into db")
 
 
-async def process_message(message):
+async def process_message(message) -> None:
     data = await prepare_dict(message)
     await insert_to_db(data)
 
 
-async def rabbitmq_fetching(channel):
-    try:
-        for method_frame, properties, body in channel.consume(queue_name):
-            message = body.decode("utf-8")
-            message = json.loads(message)
-            print(message)
-            await process_message(message)
-            # Acknowledge the message:
-            channel.basic_ack(method_frame.delivery_tag)
-            print("consumed")
-            logger.info("consumed")
-    except Exception as exc:
-        # channel.close()
-        # connection.close()
-        raise exc
+async def rabbitmq_fetching(channel) -> None:
+    """getting one message from queue rabbitmq and sending it to db"""
+    method_frame, header_frame, body = channel.basic_get(queue=QUEUE)
+    if not method_frame:
+        return
+    body = body.decode("utf-8")
+    body = json.loads(body)
+    print(body)
+    await process_message(body)
+    channel.basic_ack(method_frame.delivery_tag)
+    print("consumed")
+    logger.info("consumed")
 
 
 async def from_que_to_db() -> None:
+    """create connection to rabbitmq, start process of receiving and sending data to db"""
     connection = pika.BlockingConnection(parameters)
     channel = connection.channel()
-    channel.queue_declare(queue=queue_name, durable=True)
+    channel.queue_declare(queue=QUEUE, durable=True)
     print(channel.is_open)
     logger.info(channel.is_open)
 
     while True:
-        await rabbitmq_fetching(channel)
+        try:
+            await rabbitmq_fetching(channel)
+            await asyncio.sleep(0.5)
+        except KeyboardInterrupt:
+            channel.close()
+            connection.close()
+            logger.info("closed connection")

@@ -1,9 +1,8 @@
 from typing import AsyncGenerator
 
+from service.db.db_config import DBConfig
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
-
-from service.db.db_config import DBConfig
 
 
 def connect_string() -> str:
@@ -12,7 +11,6 @@ def connect_string() -> str:
         f"{DBConfig.DATABASE_USERNAME}:{DBConfig.DATABASE_PASSWORD}"
         f"@{DBConfig.POSTGRES_HOST}:{DBConfig.POSTGRES_PORT}/{DBConfig.DATABASE_NAME}"
     )
-
 
 
 def async_database_uri() -> str:

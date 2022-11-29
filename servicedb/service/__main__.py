@@ -16,15 +16,9 @@ logger = logging.getLogger(__name__)
 app = FastAPI()
 
 
-origins = [
-    # "http://localhost",
-    # "http://localhost:8080",
-    "*"
-]
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -32,25 +26,22 @@ app.add_middleware(
 
 @app.get("/ping")
 async def ping():
+    """ping service for debug"""
     return {"success": "Yes"}
 
 
 @app.get("/pingdb")
 async def pingdb(session: AsyncSession = Depends(get_session)):
-    # query = """SELECT id, name, surname, patronymic, phone, "text" FROM user_data;"""
+    """ping db for debug"""
     query = "SELECT 1"
-    results = (await session.execute(query)).all()
-    res = list(results)
-    print(res)
-    logger.info(res)
-    return {"success": "1"}
+    await session.execute(query).all()
+    return {"success": "Yes"}
 
 
 @app.on_event("startup")
-async def startup():
-    loop = asyncio.get_running_loop()
-    task = loop.create_task(from_que_to_db())
-    await task
+async def app_startup():
+    """run receive from rabbitmq"""
+    asyncio.create_task(from_que_to_db())
 
 
 if __name__ == "__main__":
