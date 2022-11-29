@@ -27,7 +27,7 @@ config.set_section_option(section, "DATABASE_NAME", DATABASE_NAME)
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 # target_metadata = None
-from servicedb.service.models import DeclarativeBase, UserData, metadata
+from servicedb.service.models import metadata, user_data
 
 # from service.config.db_settings import
 target_metadata = metadata
