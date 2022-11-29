@@ -1,8 +1,23 @@
 import asyncio
 import json
+import logging
 
 import tornado.web
+from service.schema import UserInput
 from service.send import send_to_que
+
+logger = logging.getLogger(__name__)
+
+
+def phone_validator(phone):
+    phone = phone.replace("+7", "8")
+    for ch in ["(", ")", "-", " "]:
+        phone = phone.replace(ch, "")
+    if not phone.isdigit():
+        return ""
+    if len(phone) > 15:
+        return ""
+    return phone
 
 
 class MainHandler(tornado.web.RequestHandler):
@@ -16,9 +31,28 @@ class MainHandler(tornado.web.RequestHandler):
     def options(self):
         pass
 
+    def filter(self, message):
+        message["phone"] = phone_validator(message["phone"])
+        if not message["phone"]:
+            raise tornado.web.HTTPError(status_code=422, log_message="wrong phone")
+        try:
+            UserInput(**message)
+        except Exception as exc:
+            logger(exc)
+            logger.error("wrong user input validation")
+            raise tornado.web.HTTPError(
+                status_code=422, log_message="wrong input"
+            ) from exc
+        return message
+
     def post(self):
         data = self.request.body
-        send_to_que(data)
+        message = json.loads(data)
+        message = self.filter(message)
+        message = json.dumps(message)
+        logger.info("try to send ")
+        print("message", message)
+        send_to_que(message)
         self.write(data)
 
 
