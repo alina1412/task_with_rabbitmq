@@ -10,6 +10,11 @@ Create 5 docker containers.
 
  Frontend gets feedback from users, sends it to backend, which validates it and sends to rabbitmq. Next service retrieves it from rabbitmq and sends data to db.
 
+## How it works
+video (1 min):  
+[![Watch the video](https://img.youtube.com/vi/QXJ_mjqCwfQ/2.jpg)](https://youtu.be/QXJ_mjqCwfQ)
+ 
+
 ## How to run locally
 if running first time
 - create virtual environment (poetry install)
@@ -37,5 +42,3 @@ if running first time
 <img src="https://user-images.githubusercontent.com/8655093/204727517-77437070-42cc-4b1d-bd0c-164f27badbe2.jpg" height="250"> </img>
 <img src="https://user-images.githubusercontent.com/8655093/204727518-3c500b06-ea9d-4798-a17d-838a126836ef.jpg" height="250"> </img>
 <img src="https://user-images.githubusercontent.com/8655093/204727520-d8979105-80c6-45e2-985c-962125f6dd34.jpg" height="250"> </img>
-
-
