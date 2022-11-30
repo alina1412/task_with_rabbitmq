@@ -3,8 +3,13 @@
 in the process
 
 ## Description
-Create 5 docker containers. Frontend gets feedback from users, sends it to backend.
+Project provides take feedback from users (frontend form), process it and save to database.
 
+Create 5 docker containers.
+
+> Frontend -> Backend -> Rabbitmq -> Saving-to-db-service -> db
+
+ Frontend gets feedback from users, sends it to backend, which validates it and sends to rabbitmq. Next service retrieves it from rabbitmq and sends data to db.
 
 ## How to run locally
 if running first time
@@ -20,10 +25,11 @@ if running first time
 ## Tools used
 - rabbitmq
 - tornado
-- fastapi (? for now)
+- fastapi
 - docker-compose
 - postgres db
 - alembic
 - poetry
 - pydantic
 - javascript, html
+- asyncio
