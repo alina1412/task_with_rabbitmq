@@ -1,37 +1,39 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="styles.css" />
     <title>Home</title>
-
-
 </head>
 
 <body>
-    <h1>Form</h1>
+    <div style="width: 50%; margin:auto;">
+        <h1>Обращение (Feedback)</h1>
 
-    <form id="form">
-        <label for="fname">Имя (First name):</label><br>
-        <input type="text" id="fname" name="fname" required><br>
+        <form id="form">
+            <p><label for="fname">Имя (First name):</label></p>
 
-        <label for="lname">Фамилия (Last name):</label><br>
-        <input type="text" id="lname" name="lname" required><br>
+            <p><input type="text" id="fname" name="fname" required></p>
+            <p><label for="lname">Фамилия (Last name):</label></p>
 
-        <label for="patronym">Отчество (Patronym):</label><br>
-        <input type="text" id="patronym" name="patronym"><br>
+            <p><input type="text" id="lname" name="lname" required></p>
+            <p><label for="patronym">Отчество (Patronym):</label></p>
 
-        <label for="phone">Телефон (Phone):</label><br>
-        <input type="tel" id="phone" name="phone" required><br>
+            <p><input type="text" id="patronym" name="patronym"></p>
+            <p><label for="phone">Телефон (Phone):</label></p>
 
-        <label for="text">Обращение (Feedback):</label><br>
-        <textarea id="text" name="text" rows="4" cols="50"></textarea> <br>
+            <p><input type="tel" id="phone" name="phone" required></p>
+            <p><label for="text">Обращение (Feedback):</label></p>
 
+            <p><textarea id="text" name="text" rows="4" cols="50" style="resize: vertical;"></textarea>
+            </p>
+            <p><button type="submit" id="btn">Отправить</button></p>
 
-        <button type="submit" id="btn">Отправить</button>
-    </form>
+        </form>
+    </div>
 
     <script>
         function myFunction(event) {
@@ -47,6 +49,9 @@
                     console.log(xhr.responseText);
                     if (xhr.status == 422) {
                         alert("Not accepting this message, check it or try again");
+                    }
+                    if (xhr.status == 200) {
+                        alert("message sent");
                     }
                 }
             };
