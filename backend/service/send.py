@@ -3,7 +3,8 @@
 import logging
 
 import pika
-from service.config import password, username
+
+from service.config import password, username  # isort: skip
 
 logger = logging.getLogger(__name__)
 

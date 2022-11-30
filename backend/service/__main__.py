@@ -3,8 +3,9 @@ import json
 import logging
 
 import tornado.web
-from service.schema import UserInput
-from service.send import send_to_que
+
+from service.schema import UserInput  # isort: skip
+from service.send import send_to_que  # isort: skip
 
 logger = logging.getLogger(__name__)
 

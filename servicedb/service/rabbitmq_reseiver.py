@@ -5,9 +5,10 @@ import logging
 
 import databases
 import pika
-from service.config import password, username
-from service.db.db_settings import async_database_uri
-from service.models import user_data
+
+from service.config import password, username  # isort: skip
+from service.db.db_settings import async_database_uri  # isort: skip
+from service.models import user_data  # isort: skip
 
 logger = logging.getLogger(__name__)
 
