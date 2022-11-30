@@ -34,8 +34,8 @@ class MainHandler(tornado.web.RequestHandler):
 
     def filter(self, message):
         message["phone"] = phone_validator(message["phone"])
-        if not message["phone"]:
-            raise tornado.web.HTTPError(status_code=422, log_message="wrong phone")
+        if not message["phone"] or not message["name"] or not message["surname"]:
+            raise tornado.web.HTTPError(status_code=422, log_message="wrong input")
         try:
             UserInput(**message)
         except Exception as exc:
