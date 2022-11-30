@@ -18,7 +18,7 @@ parameters = pika.ConnectionParameters(
     host="rabbitmq",
     # host="localhost",
     credentials=credentials,
-    virtual_host="amqp",
+    # virtual_host="amqp",
     port=5672,
 )
 QUEUE = "task_queue"

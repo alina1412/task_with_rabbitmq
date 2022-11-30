@@ -12,7 +12,7 @@ credentials = pika.PlainCredentials(username=username, password=password)
 parameters = pika.ConnectionParameters(
     host="rabbitmq",
     credentials=credentials,
-    virtual_host="amqp",
+    # virtual_host="amqp",
     port=5672,
 )
 QUEUE = "task_queue"

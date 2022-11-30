@@ -9,8 +9,6 @@ services:
       - 8080:80
     depends_on:
       - rabbitmq
-    # links:
-    #   - backend
     volumes:
       - ./frontend:/usr/share/nginx/html:ro
 
@@ -24,23 +22,20 @@ services:
       - 8765:80
     depends_on:
       - rabbitmq
-    # links:
-    #   - rabbitmq
     environment:
       - PYTHONUNBUFFERED=1
 
   rabbitmq:
     container_name: rabbitmq-service
     build: rabbitmq/
-    image: rabbitmq-service    
+    image: rabbitmq-service 
+    restart: always   
     healthcheck:
-      start_period: 60s
-      timeout: 120s
-      interval: 30s
-      test: ifconfig | grep broadcast
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 10s
     env_file: .env
     environment:
-      RABBITMQ_DEFAULT_VHOST: amqp
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
       RABBITMQ_NODE_TYPE: rabbitmq
@@ -55,7 +50,7 @@ services:
     container_name: servicedb
     build: servicedb/service
     image: servicedb-fastapi
-    restart: on-failure
+    restart: always
     env_file: .env
     environment:
       POSTGRES_DB: ${DATABASE_NAME}
@@ -69,11 +64,10 @@ services:
     ports:
       - 8000:80
     depends_on:
-      - rabbitmq
-      - db
-    # links:
-    #   - rabbitmq
-    #   - db
+      rabbitmq:
+        condition: service_healthy
+      db:
+        condition: service_healthy
 
   db:
     container_name: db
@@ -85,6 +79,10 @@ services:
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
     ports:
       - ${POSTGRES_PORT}:5432
+    healthcheck:
+      test: ["CMD-SHELL", "sh -c 'pg_isready -U ${DATABASE_USERNAME} -d ${DATABASE_NAME}'"]
+      interval: 10s
+      timeout: 5s
     volumes:
       - ./.database_data:/var/lib/postgresql/data
 
