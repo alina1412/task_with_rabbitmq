@@ -5,7 +5,9 @@ import logging
 
 import uvicorn
 from fastapi import Depends, FastAPI, Query
+from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -49,14 +51,32 @@ async def get_data(
 ):
     """get data from db with pagination"""
     query = (
-        select([user_data.c.id, user_data.c.name])
+        select(
+            [
+                user_data.c.name,
+                user_data.c.surname,
+                user_data.c.patronymic,
+                user_data.c.phone,
+                user_data.c.text,
+            ]
+        )
         .order_by("id")
         .limit(perpage)
         .offset(offset)
     )
     res = (await session.execute(query)).fetchall()
-    res = list(res)
-    return {"success": str(res)}
+    answer = []
+    for feedback in list(res):
+        answer.append(
+            {
+                "name": feedback[0],
+                "surname": feedback[1],
+                "patronymic": feedback[2],
+                "phone": feedback[3],
+                "text": feedback[4],
+            }
+        )
+    return JSONResponse(content=jsonable_encoder(answer))
 
 
 @app.on_event("startup")
