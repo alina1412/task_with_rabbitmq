@@ -2,15 +2,16 @@
 
 
 ## Description
-Project provides take feedback from users (frontend form), process it and save to database.
+The project provides functionality to take a feedback from users (a frontend form), process it and save it to the database.
 
-Create 5 docker containers.
+It runs as 5 docker containers.
 
 > Frontend -> Backend -> Rabbitmq -> Saving-to-db-service -> db
 
- Frontend gets feedback from users, sends it to backend, which validates it and sends to rabbitmq. Next service retrieves it from rabbitmq and sends data to db.
+ Frontend gets feedback from users, sends it to backend, which validates it and sends to rabbitmq. The next service retrieves it from the rabbitmq and sends the data to the db.
+The separation into containers provides the ability of scaling.
 
-## How it works
+## How it works (from the frontend outside view)
 video (1 min):  
 [![Watch the video](https://img.youtube.com/vi/QXJ_mjqCwfQ/2.jpg)](https://youtu.be/QXJ_mjqCwfQ)
  
@@ -38,6 +39,7 @@ if running first time
 - javascript, html
 - asyncio
 
+<img src="https://user-images.githubusercontent.com/8655093/205086299-895367b2-6a73-47e9-a7ec-3bb2c64669e7.jpg" height="250"> </img>
 <img src="https://user-images.githubusercontent.com/8655093/204727512-c9aabd8b-af6c-4a4c-a422-efca3961d6a9.jpg" height="250"> </img>
 <img src="https://user-images.githubusercontent.com/8655093/204727517-77437070-42cc-4b1d-bd0c-164f27badbe2.jpg" height="250"> </img>
 <img src="https://user-images.githubusercontent.com/8655093/204727518-3c500b06-ea9d-4798-a17d-838a126836ef.jpg" height="250"> </img>
