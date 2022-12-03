@@ -82,7 +82,8 @@ async def get_data(
 @app.on_event("startup")
 async def app_startup():
     """run receive from rabbitmq"""
-    asyncio.create_task(from_que_to_db())
+    loop = asyncio.get_event_loop()
+    asyncio.ensure_future(from_que_to_db(loop))
 
 
 if __name__ == "__main__":
