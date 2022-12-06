@@ -4,8 +4,7 @@ import logging
 
 import aio_pika
 import databases
-from aio_pika.abc import AbstractRobustConnection
-from aio_pika.pool import Pool
+from aio_pika.abc import AbstractChannel, AbstractQueue
 
 from service.config import password, username  # isort: skip
 from service.db.db_settings import async_database_uri  # isort: skip
@@ -43,52 +42,36 @@ async def insert_to_db(data: dict) -> None:
         logger.error("NOT inserted into db")
 
 
-async def process_message(message) -> None:
-    data = await prepare_dict(message)
-    await insert_to_db(data)
+async def process_message(message: aio_pika.abc.AbstractIncomingMessage) -> None:
+    async with message.process(ignore_processed=True):
+        encoded = message.body.decode("utf-8")
+        encoded = json.loads(encoded)
+        data = await prepare_dict(encoded)
+        await insert_to_db(data)
+        await message.ack()
+        # print("consumed")
+        logger.info("consumed")
 
-
-async def rabbitmq_fetching(channel_pool) -> None:
+async def rabbitmq_fetching(channel: AbstractChannel) -> None:
     """consume messages from rabbitmq and send it to db"""
-    async with channel_pool.acquire() as channel:  # type: aio_pika.Channel
-        await channel.set_qos(10)
+    queue: AbstractQueue = await channel.declare_queue(
+        QUEUE,
+        durable=True,
+        auto_delete=False,
+    )
+    await queue.consume(callback=process_message, no_ack=False)
 
-        queue = await channel.declare_queue(
-            QUEUE,
-            durable=True,
-            auto_delete=False,
-        )
-
-        async with queue.iterator() as queue_iter:
-            async for message in queue_iter:
-                body = message.body.decode("utf-8")
-                body = json.loads(body)
-                print(body)
-                await process_message(body)
-                await message.ack()
-                print("consumed")
-                logger.info("consumed")
 
 
 async def from_que_to_db(loop) -> None:
     """create connection to rabbitmq, start process of receiving and sending data to db"""
-
-    async def get_connection() -> AbstractRobustConnection:
-        return await aio_pika.connect_robust(
+    connection = await aio_pika.connect_robust(
             host="rabbitmq", login=username, password=password, port=5672, loop=loop
         )
-
-    connection_pool: Pool = Pool(get_connection, max_size=2, loop=loop)
-
-    async def get_channel() -> aio_pika.Channel:
-        async with connection_pool.acquire() as connection:
-            return await connection.channel()
-
-    channel_pool: Pool = Pool(get_channel, max_size=10, loop=loop)
-
+    channel = await connection.channel()
+    await channel.set_qos(1)
     try:
-        await rabbitmq_fetching(channel_pool)
+        await rabbitmq_fetching(channel)
     except KeyboardInterrupt:
-        channel_pool.close()
-        connection_pool.close()
+        connection.close()
         logger.info("closed connection")
