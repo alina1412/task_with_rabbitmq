@@ -1,10 +1,10 @@
 #!/usr/bin/env python
-import asyncio
 import json
 import logging
 
+import aio_pika
 import databases
-import pika
+from aio_pika.abc import AbstractChannel, AbstractQueue
 
 from service.config import password, username  # isort: skip
 from service.db.db_settings import async_database_uri  # isort: skip
@@ -13,15 +13,6 @@ from service.models import user_data  # isort: skip
 logger = logging.getLogger(__name__)
 
 
-credentials = pika.PlainCredentials(username=username, password=password)
-
-parameters = pika.ConnectionParameters(
-    host="rabbitmq",
-    # host="localhost",
-    credentials=credentials,
-    # virtual_host="amqp",
-    port=5672,
-)
 QUEUE = "task_queue"
 
 
@@ -51,38 +42,36 @@ async def insert_to_db(data: dict) -> None:
         logger.error("NOT inserted into db")
 
 
-async def process_message(message) -> None:
-    data = await prepare_dict(message)
-    await insert_to_db(data)
+async def process_message(message: aio_pika.abc.AbstractIncomingMessage) -> None:
+    async with message.process(ignore_processed=True):
+        encoded = message.body.decode("utf-8")
+        encoded = json.loads(encoded)
+        data = await prepare_dict(encoded)
+        await insert_to_db(data)
+        await message.ack()
+        # print("consumed")
+        logger.info("consumed")
+
+async def rabbitmq_fetching(channel: AbstractChannel) -> None:
+    """consume messages from rabbitmq and send it to db"""
+    queue: AbstractQueue = await channel.declare_queue(
+        QUEUE,
+        durable=True,
+        auto_delete=False,
+    )
+    await queue.consume(callback=process_message, no_ack=False)
 
 
-async def rabbitmq_fetching(channel) -> None:
-    """getting one message from queue rabbitmq and sending it to db"""
-    method_frame, header_frame, body = channel.basic_get(queue=QUEUE)
-    if not method_frame:
-        return
-    body = body.decode("utf-8")
-    body = json.loads(body)
-    print(body)
-    await process_message(body)
-    channel.basic_ack(method_frame.delivery_tag)
-    print("consumed")
-    logger.info("consumed")
 
-
-async def from_que_to_db() -> None:
+async def from_que_to_db(loop) -> None:
     """create connection to rabbitmq, start process of receiving and sending data to db"""
-    connection = pika.BlockingConnection(parameters)
-    channel = connection.channel()
-    channel.queue_declare(queue=QUEUE, durable=True)
-    print(channel.is_open)
-    logger.info(channel.is_open)
-
-    while True:
-        try:
-            await rabbitmq_fetching(channel)
-            await asyncio.sleep(0.5)
-        except KeyboardInterrupt:
-            channel.close()
-            connection.close()
-            logger.info("closed connection")
+    connection = await aio_pika.connect_robust(
+            host="rabbitmq", login=username, password=password, port=5672, loop=loop
+        )
+    channel = await connection.channel()
+    await channel.set_qos(1)
+    try:
+        await rabbitmq_fetching(channel)
+    except KeyboardInterrupt:
+        connection.close()
+        logger.info("closed connection")
