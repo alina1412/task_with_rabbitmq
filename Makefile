@@ -13,3 +13,7 @@ lint:
 
 req:
 	poetry export -f requirements.txt --without-hashes --without dev --output requirements.txt
+
+# run in rabbitmq docker
+status:
+	rabbitmqctl cluster_status

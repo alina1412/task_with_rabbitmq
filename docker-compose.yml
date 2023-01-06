@@ -25,11 +25,32 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
 
+  # rabbitmq:
+  #   container_name: rabbitmq-service
+  #   build: rabbitmq/
+  #   image: rabbitmq-service 
+  #   restart: always   
+  #   healthcheck:
+  #     test: rabbitmq-diagnostics -q ping
+  #     interval: 10s
+  #     timeout: 10s
+  #   env_file: .env
+  #   environment:
+  #     RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME}
+  #     RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+  #     RABBITMQ_NODE_TYPE: rabbitmq
+  #   ports:
+  #     - 5672:5672
+  #     - 15672:15672
+  #   volumes:
+  #     - r_data:/var/lib/rabbitmq/data
+  #     - r_logs:/var/log/rabbitmq/log
   rabbitmq:
-    container_name: rabbitmq-service
+    hostname: rabbitmq1
+    container_name: rabbitmq-service1
     build: rabbitmq/
-    image: rabbitmq-service 
-    restart: always   
+    image: rabbitmq-service  # 
+    # restart: always   
     healthcheck:
       test: rabbitmq-diagnostics -q ping
       interval: 10s
@@ -39,12 +60,47 @@ services:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
       RABBITMQ_NODE_TYPE: rabbitmq
+      # RABBITMQ_PID_FILE: /var/lib/rabbitmq/mnesia/rabbitmq
+      # RABBITMQ_CONFIG_FILE: /etc/rabbitmq/rabbitmq
+      # RABBITMQ_ERLANG_COOKIE: 1234
+      RABBITMQ_NODENAME: node1
     ports:
       - 5672:5672
       - 15672:15672
-    volumes:
-      - r_data:/var/lib/rabbitmq/data
-      - r_logs:/var/log/rabbitmq/log
+    # volumes:
+    #   - r_data:/var/lib/rabbitmq/data
+    #   - r_logs:/var/log/rabbitmq/log
+    
+
+  rabbitmq2:
+    hostname: rabbitmq2
+    container_name: rabbitmq-service2
+    build: rabbitmq/
+    image: rabbitmq-service  # 
+    # restart: always   
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 10s
+    env_file: .env
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+      RABBITMQ_NODE_TYPE: rabbitmq
+      # RABBITMQ_PID_FILE: /var/lib/rabbitmq/mnesia/rabbitmq
+      # RABBITMQ_CONFIG_FILE: /etc/rabbitmq/rabbitmq
+      # RABBITMQ_ERLANG_COOKIE: 1234
+      RABBITMQ_NODENAME: node2
+    ports:
+      - 5673:5672
+      - 15673:15672
+    # volumes:
+    #   - r_data:/var/lib/rabbitmq/data
+    #   - r_logs:/var/log/rabbitmq/log
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    entrypoint: /usr/local/bin/cluster_entrypoint.sh
       
   servicedb:
     container_name: servicedb
