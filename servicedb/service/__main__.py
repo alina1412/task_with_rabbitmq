@@ -31,13 +31,13 @@ app.add_middleware(
 
 @app.get("/ping")
 async def ping():
-    """ping service for debug"""
+    """Ping service for debug"""
     return {"success": "Yes"}
 
 
 @app.get("/pingdb")
 async def pingdb(session: AsyncSession = Depends(get_session)):
-    """ping db for debug"""
+    """Ping db for debug"""
     query = "SELECT 1"
     (await session.execute(query)).all()
     return {"success": "Yes"}
@@ -49,7 +49,7 @@ async def get_data(
     offset: int = Query(0, description="skip first N results"),
     session: AsyncSession = Depends(get_session),
 ):
-    """get data from db with pagination"""
+    """Get data from db with pagination"""
     query = (
         select(
             [
@@ -81,7 +81,7 @@ async def get_data(
 
 @app.on_event("startup")
 async def app_startup():
-    """run receive from rabbitmq"""
+    """Run receive from rabbitmq"""
     loop = asyncio.get_event_loop()
     asyncio.ensure_future(from_que_to_db(loop))
 

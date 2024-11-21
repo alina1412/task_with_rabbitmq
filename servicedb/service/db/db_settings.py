@@ -6,7 +6,9 @@ from sqlalchemy.orm import sessionmaker
 
 
 def connect_string() -> str:
-    """string without a driver. POSTGRES_HOST should be 'db' in docker"""
+    """String without a driver. POSTGRES_HOST
+    should be 'db' in docker
+    """
     return (
         f"{DBConfig.DATABASE_USERNAME}:{DBConfig.DATABASE_PASSWORD}"
         f"@{DBConfig.POSTGRES_HOST}:{DBConfig.POSTGRES_PORT}/{DBConfig.DATABASE_NAME}"
@@ -34,7 +36,9 @@ class DBManager:
 
     @property
     def session_maker(self):
-        return sessionmaker(self.engine, class_=AsyncSession, expire_on_commit=False)
+        return sessionmaker(
+            self.engine, class_=AsyncSession, expire_on_commit=False
+        )
 
 
 async def get_session() -> AsyncGenerator:
